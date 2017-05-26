@@ -223,7 +223,7 @@ const generatePdf = (diagrams, shipment, observation) => {
   };
 
   const XPoint = bind(({ x, y, r, style }) => {
-    return Path({ d: `M${x - r},${y - r}l${2 * r},${2 * r}m0,${2 * -r}l${2*-r},${2*r}`, style });
+    return Path({ d: `M${x - r},${y - r}l${2 * r},${2 * r}m0,${2 * -r}l${2 * -r},${2 * r}`, style });
   });
 
   //const diagrams = getIllustrationsByVehicleType('T1');
@@ -430,8 +430,69 @@ const generatePdf = (diagrams, shipment, observation) => {
 }
 
 describe('container', () => {
-  it.only('should put absolute position', (done) => {
-    const typeMapping2 = {
+  it.only('should put xx', (done) => {
+    const bottoms = ['G1', 'C2', 'C3', 'C4'];
+    const typeMapping = {
+      T1: 'trade_car',
+      FT: 'fridge',
+      T3: 'chassis',
+      TR: 'trailer',
+      AR: 'artic',
+      G1: 'box',
+      C2: 'c20',
+      C3: 'c30',
+      C4: 'c40',
+      T2: 'caravan',
+      T5: 'minibus',
+      HB: 'lorry',
+      VA: 'van',
+      TM1: 'tugmaster_lhd',
+      TM2: 'tugmaster_rhd',
+      RT: 'roadTrain'
+    };
+    const keys = Object.keys(typeMapping);
+    let n = 0;
+    const gridSizes = {};
+    function dd() {
+      n++;
+      console.log(n, keys.length);
+      if (n === keys.length) {
+    console.log(gridSizes);
+        done();
+      }
+    }
+
+    const getVb = (vb) => {
+      return vb.split(' ').map(Number);
+    }
+    keys.forEach(key => {
+      new VehicleIllustrationService().getIllustrationsByVehicleType(key, function (err, diagrams) {
+        const topPart = getVb(/viewBox="(.*?)"/g.exec(diagrams['top'])[1]);
+        const rightPart = getVb(/viewBox="(.*?)"/g.exec(diagrams['right'])[1]);
+        const length = rightPart[2];
+        const height = rightPart[3];
+        const width = topPart[3];
+        const rat = 100 / (length + width);
+        let rright = rat * width;
+        let left = rat * length;
+        // if ((rright % 1) > 0.5) {
+        //   rright = Math.ceil(rright);
+        //   left = Math.floor(left);
+        // } else {
+        //   rright = Math.floor(rright);
+        //   left = Math.ceil(left);
+        // }
+        console.log('>', key, typeMapping[key], { left, rright });
+        gridSizes[typeMapping[key]] = { left, right: rright };
+        if(bottoms.indexOf(key)>=0) {
+          gridSizes[typeMapping[key]]['_bottom'] = left;
+        }
+        dd();
+      });
+    });
+  });
+  xit('should put absolute position', (done) => {
+    const typeMapping = {
       AR: 'artic',
       CC: 'artic',
       C2: 'c20',
@@ -463,7 +524,7 @@ describe('container', () => {
       TM2: 'tugmaster_lhd',
       RT: 'road_train'
     };
-    const typeMapping = { FT: '' };
+    const typeMapping2 = { FT: '' };
     const keys = Object.keys(typeMapping);
     let n = 0;
     function dd() {
